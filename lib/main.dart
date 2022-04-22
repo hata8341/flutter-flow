@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:practice/MyData.dart';
-import 'package:practice/Slider.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/riverpod.dart';
+
+import 'mydata.dart';
+
+// 1.グローバル変数にProviderを設定
+final _mydataProvider =
+    StateNotifierProvider<MyData, double>((ref) => MyData());
 
 void main() {
-  runApp(MyApp());
+  // 2.ProviderScopeを設定
+  runApp(
+    ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -23,7 +33,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, this.title}) : super(key: key);
   final String? title;
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
@@ -31,24 +40,30 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (BuildContext context) => MyData(),
-      child: Scaffold(
-          appBar: AppBar(
-            title: Text(widget.title!),
-          ),
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Consumer<MyData>(
-                  builder: (context, schedule, _) => Text(
-                        context.select(
-                            (MyData mydata) => mydata.value.toStringAsFixed(2)),
-                        style: const TextStyle(fontSize: 100),
-                      )),
-              MySlider(),
-            ],
-          )),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title!),
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 3.ConsumerWidgetを使い、watchを使えるようにする
+          Consumer(builder: (context, ref, child) {
+            return Text(
+              // 4.watch関数にプロバイダーを渡し、stateを取り出す
+              ref.watch(_mydataProvider).toStringAsFixed(2),
+              style: const TextStyle(fontSize: 100),
+            );
+          }),
+          Consumer(builder: (context, ref, child) {
+            return Slider(
+                value: ref.watch(_mydataProvider),
+                // 5.context.readにプロバイダーのnotifierを与えて、メソッドを呼び出す
+                onChanged: (value) =>
+                    ref.read(_mydataProvider.notifier).changeState(value));
+          }),
+        ],
+      ),
     );
   }
 }

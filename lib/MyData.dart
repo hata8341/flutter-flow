@@ -1,12 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'package:riverpod/riverpod.dart';
 
-class MyData with ChangeNotifier {
-  double _value = 0.5;
-
-  double get value => _value;
-
-  set value(double value) {
-    _value = value;
-    notifyListeners();
-  }
+class MyData extends StateNotifier<double> {
+  MyData() : super(0.5);
+  void changeState(newState) => this.state = newState;
 }
