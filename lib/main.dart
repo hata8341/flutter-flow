@@ -1,12 +1,13 @@
+import "dart:async";
+
 import 'package:flutter/material.dart';
+import 'package:practice/BussinessLogic.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,43 +21,51 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+  const MyHomePage({Key? key, this.title}) : super(key: key);
+  final String? title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
+class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  var intStream = StreamController<int>();
+  var stringStream = StreamController<String>();
+  var generator = Generator();
+  var coodinator = Coordinator();
+  var consumer = Consumer();
 
   void _incrementCounter() {
+    generator.generate();
     setState(() {
-      print('setState()が呼ばれた');
       _counter++;
     });
   }
 
   @override
   void initState() {
-    print('initState()が呼ばれた');
+    generator.init(intStream);
+    coodinator.init(intStream, stringStream);
+    consumer.init(stringStream);
+    coodinator.coorinate();
+    consumer.consume();
+
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
   }
 
   @override
-  void didChangeDependencies() {
-    print('didChangeDependenciesが呼ばれた');
-    super.didChangeDependencies();
+  void dispose() {
+    intStream.close();
+    stringStream.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    print('buildした');
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(widget.title!),
       ),
       body: Center(
         child: Column(
@@ -67,57 +76,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             ),
             Text(
               '$_counter',
+              key: const Key('counter'),
               style: Theme.of(context).textTheme.headline4,
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        key: const Key('increment'),
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
-  }
-
-  @override
-  void didUpdateWidget(covariant MyHomePage oldWidget) {
-    print('didUpdateWidgetが呼ばれた');
-    print(oldWidget);
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void deactivate() {
-    print('deactiveが呼ばれた');
-    super.deactivate();
-  }
-
-  @override
-  void dispose() {
-    print('disposeが呼ばれた');
-    WidgetsBinding.instance!.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    print('アプリの');
-    print("state = $state");
-    switch (state) {
-      case AppLifecycleState.inactive:
-        print('非アクティブになった場合の処理');
-        break;
-      case AppLifecycleState.paused:
-        print('停止したときの処理');
-        break;
-      case AppLifecycleState.resumed:
-        print('再開したときの処理');
-        break;
-      case AppLifecycleState.detached:
-        print('破棄されたときの処理');
-        break;
-      default:
-    }
   }
 }
