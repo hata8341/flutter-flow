@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:practice/Widgets.dart';
-
-import 'MyInheritedWidget.dart';
+import 'package:practice/MyData.dart';
+import 'package:practice/Slider.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,33 +29,26 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-    print('count: ' + _counter.toString());
-  }
-
-  final Widget _widget = const Center(
-    child: WidgetA(),
-  );
-
   @override
   Widget build(BuildContext context) {
-    // InheritedWidgetが間に挟まり、childでScaffoldを指定している
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title!),
-      ),
-
-      body: MyInheritedWidget(count: _counter, child: _widget),
-      // body: _widget,
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+    return ChangeNotifierProvider(
+      create: (BuildContext context) => MyData(),
+      child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title!),
+          ),
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Consumer<MyData>(
+                  builder: (context, schedule, _) => Text(
+                        context.select(
+                            (MyData mydata) => mydata.value.toStringAsFixed(2)),
+                        style: const TextStyle(fontSize: 100),
+                      )),
+              MySlider(),
+            ],
+          )),
     );
   }
 }
