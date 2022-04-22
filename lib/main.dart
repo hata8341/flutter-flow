@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:practice/hello_world/dummy.dart';
 
 void main() {
   runApp(const MyApp());
@@ -8,7 +7,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,7 +28,7 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   int _counter = 0;
 
   void _incrementCounter() {
@@ -38,22 +36,13 @@ class _MyHomePageState extends State<MyHomePage> {
       print('setState()が呼ばれた');
       _counter++;
     });
-    nextPage();
-  }
-
-  void nextPage() async {
-    {
-      await Navigator.of(context)
-          .pushReplacement(MaterialPageRoute(builder: (context) {
-        return DummyPage();
-      }));
-    }
   }
 
   @override
   void initState() {
     print('initState()が呼ばれた');
     super.initState();
+    WidgetsBinding.instance!.addObserver(this);
   }
 
   @override
@@ -107,6 +96,28 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     print('disposeが呼ばれた');
+    WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print('アプリの');
+    print("state = $state");
+    switch (state) {
+      case AppLifecycleState.inactive:
+        print('非アクティブになった場合の処理');
+        break;
+      case AppLifecycleState.paused:
+        print('停止したときの処理');
+        break;
+      case AppLifecycleState.resumed:
+        print('再開したときの処理');
+        break;
+      case AppLifecycleState.detached:
+        print('破棄されたときの処理');
+        break;
+      default:
+    }
   }
 }
