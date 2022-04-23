@@ -21,3 +21,13 @@ void func() {
   user2 = user3;
   print(user2);
 }
+
+void func2() {
+  String jsonString = '{"name":"kazutxt","age":30}';
+  User fromJsonUser = User.fromJson(json.decode(jsonString));
+  print(fromJsonUser);
+
+  User toJsonUser = const User('kazutxt2', 32);
+  Map<String, dynamic> jsonData = toJsonUser.toJson();
+  print(jsonData);
+}
