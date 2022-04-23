@@ -1,16 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:practice/MyData.dart';
+import 'dart:async';
+import 'dart:isolate';
 
-// 1.グローバル変数にProviderを設定
-final _mydataProvider = StateNotifierProvider<MyData, double>((_) => MyData());
+import 'package:flutter/material.dart';
 
 void main() {
-  // 2.ProviderScopeを設定
   runApp(
-    ProviderScope(
-      child: MyApp(),
-    ),
+    MyApp(),
   );
 }
 
@@ -35,36 +30,70 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
+
+  Future<void> _incrementCounter() async {
+    var recivePort = ReceivePort();
+    var sendPort = recivePort.sendPort;
+    late Capability capability;
+
+    recivePort.listen((message) {
+      print(message);
+      recivePort.close();
+    });
+
+    final isolate = await Isolate.spawn(child, sendPort);
+
+    Timer(const Duration(seconds: 5), () {
+      print('pausing');
+      capability = isolate.pause();
+    });
+
+    Timer(const Duration(seconds: 10), () {
+      print('resume');
+      isolate.resume(capability);
+    });
+
+    Timer(const Duration(seconds: 15), () {
+      print('kill');
+      isolate.kill();
+    });
+
+    setState(() {
+      _counter++;
+    });
+  }
+
+  static void child(SendPort sendPort) {
+    int i = 0;
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      return sendPort.send(i++);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title!),
       ),
-      body: const MyContents(),
-    );
-  }
-}
-
-class MyContents extends HookConsumerWidget {
-  const MyContents({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final _value = ref.watch(_mydataProvider);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          _value.toStringAsFixed(2),
-          style: const TextStyle(fontSize: 100),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text('ボタンをタップした回数: '),
+            Text(
+              '$_counter',
+              style: Theme.of(context).textTheme.headline4,
+            )
+          ],
         ),
-        Slider(
-            value: _value,
-            onChanged: (value) {
-              return ref.read(_mydataProvider.notifier).changeState(value);
-            })
-      ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
