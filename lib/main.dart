@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'dart:isolate';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -33,42 +34,22 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   Future<void> _incrementCounter() async {
-    var recivePort = ReceivePort();
-    var sendPort = recivePort.sendPort;
-    late Capability capability;
-
-    recivePort.listen((message) {
-      print(message);
-      recivePort.close();
-    });
-
-    final isolate = await Isolate.spawn(child, sendPort);
-
-    Timer(const Duration(seconds: 5), () {
-      print('pausing');
-      capability = isolate.pause();
-    });
-
-    Timer(const Duration(seconds: 10), () {
-      print('resume');
-      isolate.resume(capability);
-    });
-
-    Timer(const Duration(seconds: 15), () {
-      print('kill');
-      isolate.kill();
-    });
+    // computeメソッドは第２引数が第一引数の関数のパラメタとなる
+    compute(child, 1).then(
+      (value) {
+        print(value);
+      },
+    );
+    print('main end');
 
     setState(() {
       _counter++;
     });
   }
 
-  static void child(SendPort sendPort) {
-    int i = 0;
-    Timer.periodic(const Duration(seconds: 1), (timer) {
-      return sendPort.send(i++);
-    });
+  static int child(int input) {
+    sleep(const Duration(seconds: 10));
+    return input;
   }
 
   @override
