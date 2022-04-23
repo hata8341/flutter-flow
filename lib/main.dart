@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
-
-import 'mydata.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:practice/MyData.dart';
 
 // 1.グローバル変数にProviderを設定
-final _mydataProvider =
-    StateNotifierProvider<MyData, double>((ref) => MyData());
+final _mydataProvider = StateNotifierProvider<MyData, double>((_) => MyData());
 
 void main() {
   // 2.ProviderScopeを設定
@@ -44,26 +41,30 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title!),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // 3.ConsumerWidgetを使い、watchを使えるようにする
-          Consumer(builder: (context, ref, child) {
-            return Text(
-              // 4.watch関数にプロバイダーを渡し、stateを取り出す
-              ref.watch(_mydataProvider).toStringAsFixed(2),
-              style: const TextStyle(fontSize: 100),
-            );
-          }),
-          Consumer(builder: (context, ref, child) {
-            return Slider(
-                value: ref.watch(_mydataProvider),
-                // 5.context.readにプロバイダーのnotifierを与えて、メソッドを呼び出す
-                onChanged: (value) =>
-                    ref.read(_mydataProvider.notifier).changeState(value));
-          }),
-        ],
-      ),
+      body: const MyContents(),
+    );
+  }
+}
+
+class MyContents extends HookConsumerWidget {
+  const MyContents({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final _value = ref.watch(_mydataProvider);
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          _value.toStringAsFixed(2),
+          style: const TextStyle(fontSize: 100),
+        ),
+        Slider(
+            value: _value,
+            onChanged: (value) {
+              return ref.read(_mydataProvider.notifier).changeState(value);
+            })
+      ],
     );
   }
 }
